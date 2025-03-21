@@ -1,7 +1,7 @@
 # Compose file for Ollama and Open-WebUI stack
 x-shared: &shared-settings
   env_file:
-  - .env # Load environment variables from .env
+  - stack.env # Load environment variables from .env
   environment:
     TZ: ${STACK_TIMEZONE} # Apply the timezone from .env
     LOG_LEVEL: ${LOG_LEVEL} # Apply the log level from .env
