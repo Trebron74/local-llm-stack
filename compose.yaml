@@ -1,0 +1,91 @@
+# Compose file for Ollama and Open-WebUI stack
+x-shared: &shared-settings
+  env_file:
+  - .env # Load environment variables from .env
+  environment:
+    TZ: ${STACK_TIMEZONE} # Apply the timezone from .env
+    LOG_LEVEL: ${LOG_LEVEL} # Apply the log level from .env
+
+
+services:
+  ollama:
+    container_name: ollama
+    image: ollama/ollama:${OLLAMA_DOCKER_TAG-latest} # Use dynamic Docker tag
+    pull_policy: always  # Ensure the latest image is always pulled
+    restart: unless-stopped # Restart container unless stopped manually
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES_OLLAMA} # GPU access for Ollama
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility # GPU capabilities
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    volumes:
+      - ./data/ollama:/root/.ollama # Updated volume mapping
+    ports:
+      - "${OLLAMA_WEBAPI_PORT}:11434" # Map API port from .env
+    tty: true                         # Enable terminal for debugging
+    healthcheck:
+      test: ollama --version || exit 1
+      interval: 60s
+      timeout: 10s
+      retries: 5
+    <<: *shared-settings              # Apply shared settings
+
+
+  model-updater:
+    container_name: model-updater
+    image: ollama/ollama:${OLLAMA_DOCKER_TAG-latest}
+    volumes:
+      - ./scripts:/scripts            # Mount scripts folder
+      - ./data/ollama:/root/.ollama   # Mount Ollama data folder
+    environment:
+      - OLLAMA_LLM_MODELS=${OLLAMA_LLM_MODELS} # Load LLM models from .env
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL} # Set Ollama base URL
+    entrypoint: /bin/sh
+    command:
+      - "-c"
+      - "/scripts/pull_models.sh"
+    depends_on:
+      - ollama                        # Ensure Ollama starts first
+    <<: *shared-settings              # Apply shared settings
+
+
+  open-webui:
+    container_name: open-webui
+    image: ghcr.io/open-webui/open-webui:${OPEN_WEBUI_DOCKER_TAG-main} # Use dynamic Docker tag
+    pull_policy: always               # Ensure the latest image is always pulled
+    restart: unless-stopped           # Restart container unless stopped manually
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES_OPEN_WEBUI} # Optional GPU access
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility # GPU capabilities
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL} 
+      - CORS_ALLOW_ORIGIN=${OPEN_WEBUI_CORS_ALLOW_ORIGIN} # Set CORS policy
+      - USER_AGENT=${OPEN_WEBUI_USER_AGENT} # Set user-agent for external requests
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    volumes:
+      - ./data/open-webui:/app/backend/data  # local folder volume mapping
+    ports:
+      - "${OPEN_WEBUI_PORT-3000}:8080" # Map web UI port from .env
+    depends_on:
+      - ollama                        # Ensure Ollama starts first
+    healthcheck:
+      test: ["CMD-SHELL", "curl --silent --fail http://localhost:8080/health | jq -ne 'input.status == true' || exit 1"]
+      interval: 60s
+      timeout: 10s
+      retries: 5
+    <<: *shared-settings              # Apply shared settings
+
+
+volumes:
+  ollama: {}
+  open-webui: {}
