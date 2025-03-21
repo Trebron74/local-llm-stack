@@ -6,7 +6,6 @@ x-shared: &shared-settings
     TZ: ${STACK_TIMEZONE} # Apply the timezone from .env
     LOG_LEVEL: ${LOG_LEVEL} # Apply the log level from .env
 
-
 services:
   ollama:
     container_name: ollama
@@ -35,7 +34,6 @@ services:
       retries: 5
     <<: *shared-settings              # Apply shared settings
 
-
   model-updater:
     container_name: model-updater
     image: ollama/ollama:${OLLAMA_DOCKER_TAG-latest}
@@ -52,7 +50,6 @@ services:
     depends_on:
       - ollama                        # Ensure Ollama starts first
     <<: *shared-settings              # Apply shared settings
-
 
   open-webui:
     container_name: open-webui
@@ -84,7 +81,6 @@ services:
       timeout: 10s
       retries: 5
     <<: *shared-settings              # Apply shared settings
-
 
 volumes:
   ollama: {}
