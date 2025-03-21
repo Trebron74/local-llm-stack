@@ -1,6 +1,5 @@
 # Environment variables (secrets and personal information)
 .env
-stack.env
 
 # Log files
 *.log
