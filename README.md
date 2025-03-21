@@ -10,7 +10,6 @@ The goal of this project is to build a local LLM (Large Language Model) stack th
 
 - **Ollama**: A service for managing and deploying LLM models.
 - **Open-WebUI**: A web-based interface for interacting with LLM models.
-- **Portainer Compatibility**: The stack is compatible with Portainer, making it easy to manage Docker containers through a graphical interface.
 
 ## Getting Started
 
@@ -25,11 +24,7 @@ The goal of this project is to build a local LLM (Large Language Model) stack th
     ```sh
     cp .env.template .env
     ```
-    - Create a symbolic link from `.env` to `stack.env`:
-    ```sh
-    ln -s stack.env .env
-    ```
-
+ 
 3. Deploy the stack using Docker Compose:
     ```sh
     docker-compose -f compose.yaml up -d
@@ -42,10 +37,6 @@ The goal of this project is to build a local LLM (Large Language Model) stack th
     - With actual values from `.env`:
       - Ollama API: `http://localhost:11434`
       - Open-WebUI: `http://localhost:3000`
-
-## Portainer Compatibility
-
-When using Portainer, ensure that the environment file is named `stack.env` as Portainer expects this naming convention. If the symbolic link does not work, make sure the content of the `.env` file is present in the `stack.env` file for Portainer to work properly.
 
 ## Future Plans
 
